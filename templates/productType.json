@@ -1,0 +1,60 @@
+{
+  "productType": {
+    "endpoint": "/ccadmin/v1/productTypes",
+    "payload": [
+      {
+        "id": "{{id}}",
+        "displayName": "{{displayName}}",
+        "variants": "{{variants}}",
+        "specifications": "{{specifications}}"
+      }
+    ]
+  },
+  "skuProperties": {
+    "endpoint": "/ccadmin/v1/skuProperties",
+    "payload": {
+      "{{#each skuProperties}}": {
+        "productTypeId": "{{itemType.replace('sku-','')}}",
+        "id": "{{id}}",
+        "label": "{{label}}",
+        "hidden": "{{hidden}}",
+        "maxValue": "{{maxValue}}",
+        "length": "{{length}}",
+        "variantBasedDisplay": "{{variantBasedDisplay}}",
+        "type": "{{type}}",
+        "required": "{{required}}",
+        "searchable": "{{searchable}}",
+        "writable": "{{writable}}",
+        "internalOnly": "{{internalOnly}}",
+        "default": "{{#? default}}",
+        "minValue": "{{minValue}}",
+        "listingVariant": "{{listingVariant}}",
+        "propertyType": "{{propertyType}}",
+        "localizable": "{{localizable}}",
+        "textSearchable": "{{textSearchable}}",
+        "dimension": "{{dimension}}"
+      }
+    }
+  },
+  "shopperInputs": {
+    "endpoint": "/ccadmin/v1/shopperInputs",
+    "payload": {
+      "{{#each shopperInputs}}": {
+        "name": "{{name}}",
+        "label": "{{label}}",
+        "id": "{{id}}",
+        "promptText": "{{promptText}}",
+        "type": "{{type}}",
+        "required": "{{required}}"
+      }
+    }
+  },
+  "link-inputs": {
+    "endpoint": "/ccadmin/v1/productTypes/{{id}}/shopperInputs",
+    "payload": {
+      "{{#each shopperInputs}}": {
+        "id": "{{id}}"
+      }
+    }
+  }
+}
