@@ -5,22 +5,17 @@ const fs = require('fs');
 
 module.exports = {
 
-	buildRequests: function(templateFileName, dataFileName) {
+	/** Transforms json data to a json template using the stjs library **/
+	transformJson: function(templateFileName, data, method) {
 
 
-		var method = "post";
 		try {
 			let rawdata = fs.readFileSync(templateFileName, 'utf8');
 			var template = JSON.parse(rawdata);
 		} catch (e) {
 			console.log("Error", e.stack);
 		}
-		try {
-			let rawdata = fs.readFileSync(dataFileName, 'utf8');
-			var data = JSON.parse(rawdata);
-		} catch (e) {
-			console.log("Error", e.stack);
-		}
+
 
 		var sel = ST.select(data).transformWith(template);
 
@@ -30,15 +25,17 @@ module.exports = {
 		var apis = [];
 		objects.forEach(function(object) {
 
-			if (object.payload.length > 0) {
+			if (typeof object.payload !== 'undefined') {
+				//if (object.payload.length > 0) {
 				object.payload.forEach(function(item) {
 					var api = {
 						"endpoint": object.endpoint,
-						"method": object.method,
+						"method": method,
 						"payload": item
 					}
 					apis.push(api)
 				});
+				//}
 			}
 		});
 		return apis;
@@ -48,15 +45,24 @@ module.exports = {
 
 		var loginPromise = login(config);
 
-		loginPromise
-			.then(function(access_token) {
-				if (access_token) {
-					var promise = makeRequest(config, access_token, json);
-				}
-			}, errHandler)
-			.then(function(data) {
-				console.log(data)
-			})
+		return new Promise(function(resolve, reject) {
+			loginPromise
+				.then(function(access_token) {
+					if (access_token) {
+						var promise = makeGetRequest(config, access_token, json);
+						promise.then(function(data) {
+							console.log("new data: " + JSON.stringify(data));
+							resolve(data);
+						})
+						//console.log("promise: " + promise);
+						//return promise;
+					}
+				}, errHandler)
+				.then(function(data) {
+					console.log("then 2: " + data);
+				})
+			//console.log("result: " + result);
+		})
 	}
 }
 
@@ -106,7 +112,7 @@ function makeRequest(config, access_token, apis) {
 	if (apis.length > 0) {
 		var api = apis.shift();
 		var options = {
-			method: 'POST',
+			method: api.method,
 			url: config.host + api.endpoint,
 			headers: {
 				'cache-control': 'no-cache',
@@ -126,7 +132,45 @@ function makeRequest(config, access_token, apis) {
 			}
 			console.log(JSON.stringify(body));
 			console.log("\n\n");
-			return makeRequest(config, access_token, apis);
+			if (apis.length > 0) {
+				return makeRequest(config, access_token, apis);
+			} else {
+				console.log("returning body: " + JSON.stringify(body));
+				return body;
+			}
+		});
+
+
+	}
+}
+
+function makeGetRequest(config, access_token, apis) {
+
+	if (apis.length > 0) {
+		var api = apis.shift();
+		var options = {
+			method: api.method,
+			url: config.host + api.endpoint,
+			headers: {
+				'cache-control': 'no-cache',
+				'Authorization': 'Bearer ' + access_token,
+				'X-CCAsset-Language': 'en',
+				'Content-Type': 'application/json'
+			},
+			body: api.payload,
+			json: true
+		};
+
+		console.log("Request URL: " + options.url);
+		return new Promise(function(resolve, reject) {
+			request(options, function(error, response, body) {
+				console.log("Status Code: " + response.statusCode);
+				if (error) {
+					console.log(error + "\n" + options);
+					reject(error);
+				}
+				resolve(body)
+			});
 		});
 
 

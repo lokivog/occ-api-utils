@@ -1,0 +1,6 @@
+{
+  "productType": {
+    "endpoint": "/ccadmin/v1/productTypes/{{id}}",
+    "payload" : [{}]
+  }
+}
